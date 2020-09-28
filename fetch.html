@@ -38,9 +38,9 @@
         // Observer pattern (lazy loading)
         const observer = new IntersectionObserver((image, observer) => {
             image.forEach(async singleImage => {
-                if (singleImage.intersectionRatio > 0.1) {
-                    console.log(singleImage.intersectionRatio);
-                    loadImage(singleImage.target);
+                if (singleImage.isIntersecting && singleImage.target.hasAttribute('data')) {
+                     loadImage(singleImage.target);
+                     singleImage.target.removeAttribute('data');
                 }
             })
         }, {
