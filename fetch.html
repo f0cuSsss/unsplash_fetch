@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Photos fetch async</title>
+
+    <style>
+        #wrap {
+            background-color: white;
+            text-align: center;
+        }
+
+        .img-frame {
+            width: 20vw;
+            height: auto;
+            margin: 5px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div id="wrap">
+
+    </div>
+
+
+    <script>
+        addEventListener("DOMContentLoaded", () => { 
+            fetchPhotos();
+        })
+
+        const access_key = 'DEDjE2fQ4tCzlrbWYkPPfKABv7Ekzv6uaj4DhORzX08';
+        var page_num = 1;
+        const part = 30;
+        var canLoad = new Boolean(true);
+
+
+        // Observer pattern (lazy loading)
+        const observer = new IntersectionObserver((image, observer) => {
+            image.forEach(async singleImage => {
+                if (singleImage.intersectionRatio > 0.1) {
+                    console.log(singleImage.intersectionRatio);
+                    loadImage(singleImage.target);
+                }
+            })
+        }, {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        });
+
+
+        // Set image src from data attribute
+        async function loadImage(image) {
+            image.src = image.getAttribute('data');
+        }
+
+
+        // Fetch and append images
+        async function fetchPhotos() {
+            var req = `https://api.unsplash.com/search/photos?page=${page_num}&per_page=${part}&query=sea&client_id=${access_key}`;
+            fetch(req)
+                .then((response) => {
+                    return response.json();
+                })
+                .then((data) => {
+                    const wrap = document.getElementById("wrap");
+
+                    for (let i = 0; i < part; i++) {
+
+                        let img = document.createElement("img");
+                        img.className = "img-frame";
+                        img.setAttribute("data", data.results[i].urls.regular);
+                        img.src = "data:image/gif;base64,R0lGODlhAQAEAIAAAP///wAAACH5BAEAAAEALAAAAAABAAQAAAICjFMAOw==";
+                        img.alt = data.results[i].alt_description;
+                        wrap.append(img);
+
+                        // Adding image to observe
+                        observer.observe(img);
+                    }
+                    page_num++;
+                    canLoad = true;
+                })
+                .catch((err) => console.log);
+        }
+
+
+        // Follow scroll (infinity scroll)
+        addEventListener('scroll', async () => {
+            const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+
+            if (scrollTop + clientHeight >= scrollHeight - 300 && canLoad) {
+                await fetchPhotos();
+                canLoad = false;
+            }
+        })
+
+    </script>
+</body>
+</html>
